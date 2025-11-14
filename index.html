@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система управления задачами</title>
+    <style>
+        :root {
+            --bg-primary: #1a1f3a;
+            --bg-secondary: #252b48;
+            --bg-card: #2d3454;
+            --border-color: #4c5fd5;
+            --accent-color: #00d4aa;
+            --gradient-start: #4c5fd5;
+            --gradient-end: #00d4aa;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --status-standard: #6B7280;
+            --status-silver: #C0C0C0;
+            --status-gold: #FFD700;
+            --urgent-color: #ff4757;
+            --normal-color: #5f27cd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--bg-secondary);
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 44px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: var(--text-primary);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 95, 213, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+        }
+
+        .btn-success {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+        }
+
+        .btn-danger {
+            background: var(--urgent-color);
+            color: var(--text-primary);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            min-height: auto;
+        }
+
+        .header {
+            background: var(--bg-secondary);
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header h2 {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-header h3 {
+            color: var(--accent-color);
+            font-size: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: var(--text-primary);
+            border-color: transparent;
+        }
+
+        .tab:hover {
+            border-color: var(--accent-color);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        table th {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        table td {
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        table tr:hover {
+            background: var(--bg-card);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-standard {
+            background: var(--status-standard);
+            color: var(--text-primary);
+        }
+
+        .status-silver {
+            background: var(--status-silver);
+            color: var(--bg-primary);
+        }
+
+        .status-gold {
+            background: var(--status-gold);
+            color: var(--bg-primary);
+        }
+
+        .urgency-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .urgency-urgent {
+            background: var(--urgent-color);
+            color: var(--text-primary);
+        }
+
+        .urgency-normal {
+            background: var(--normal-color);
+            color: var(--text-primary);
+        }
+
+        .task-status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .task-status-not_started {
+            background: #6B7280;
+            color: var(--text-primary);
+        }
+
+        .task-status-in_progress {
+            background: #3B82F6;
+            color: var(--text-primary);
+        }
+
+        .task-status-completed {
+            background: var(--accent-color);
+            color: var(--bg-primary);
+        }
+
+        .task-status-rejected {
+            background: var(--urgent-color);
+            color: var(--text-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 16px;
+            border: 2px solid var(--border-color);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--accent-color);
+            font-size: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .error {
+            background: rgba(255, 71, 87, 0.1);
+            border: 1px solid var(--urgent-color);
+            color: var(--urgent-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .success {
+            background: rgba(0, 212, 170, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .task-item {
+            background: var(--bg-card);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            border-color: var(--accent-color);
+            transform: translateX(4px);
+        }
+
+        .task-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .task-item-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .task-item-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            transition: width 0.3s ease;
+        }
+
+        .employee-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .employee-card {
+            background: var(--bg-card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .employee-card h4 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .employee-card p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .employee-card .status-badge {
+            margin-top: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .login-box {
+                padding: 24px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                width: 100%;
+            }
+
+            .button-group .btn {
+                flex: 1;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            table th,
+            table td {
+                padding: 8px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <h1>Система управления задачами</h1>
+            <div id="loginError" class="error hidden"></div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Имя пользователя</label>
+                    <input type="text" id="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="hidden">
+        <div class="header">
+            <div class="header-content">
+                <h2>Панель администратора</h2>
+                <div class="user-info">
+                    <span id="adminUsername"></span>
+                    <button class="btn btn-secondary btn-small" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="tabs">
+                <div class="tab active" onclick="showAdminTab('dashboard')">Обзор</div>
+                <div class="tab" onclick="showAdminTab('employees')">Сотрудники</div>
+                <div class="tab" onclick="showAdminTab('tasks')">Задачи</div>
+                <div class="tab" onclick="showAdminTab('settings')">Настройки</div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="adminDashboard" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Статистика</h3>
+                    </div>
+                    <div class="stats-grid" id="adminStats"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Все задачи</h3>
+                    </div>
+                    <div class="table-container">
+                        <table id="allTasksTable">
+                            <thead>
+                                <tr>
+                                    <th>Задача</th>
+                                    <th>Сотрудник</th>
+                                    <th>Срочность</th>
+                                    <th>Статус</th>
+                                    <th>Прогресс</th>
+                                    <th>Срок</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allTasksBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employees Tab -->
+            <div id="adminEmployees" class="tab-content hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Управление сотрудниками</h3>
+                        <button class="btn btn-success btn-small" onclick="openAddEmployeeModal()">+ Добавить сотрудника</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ФИО</th>
+                                    <th>Должность</th>
+                                    <th>Место работы</th>
+                                    <th>Статус</th>
+                                    <th>Баллы (неделя)</th>
+                                    <th>Баллы (месяц)</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks Tab -->
+            <div id="adminTasks" class="tab-content hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Управление задачами</h3>
+                        <button class="btn btn-success btn-small" onclick="openAddTaskModal()">+ Добавить задачу</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Сотрудник</th>
+                                    <th>Срочность</th>
+                                    <th>Статус</th>
+                                    <th>Прогресс</th>
+                                    <th>Срок</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasksTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="adminSettings" class="tab-content hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Настройки пороговых значений</h3>
+                    </div>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label for="silverThreshold">Порог для статуса "Серебро" (баллы в неделю)</label>
+                            <input type="number" id="silverThreshold" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="goldThreshold">Порог для статуса "Золото" (баллы в неделю)</label>
+                            <input type="number" id="goldThreshold" min="1" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Panel -->
+    <div id="employeePanel" class="hidden">
+        <div class="header">
+            <div class="header-content">
+                <h2>Панель сотрудника</h2>
+                <div class="user-info">
+                    <span id="employeeUsername"></span>
+                    <button class="btn btn-secondary btn-small" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="tabs">
+                <div class="tab active" onclick="showEmployeeTab('profile')">Профиль</div>
+                <div class="tab" onclick="showEmployeeTab('myTasks')">Мои задачи</div>
+                <div class="tab" onclick="showEmployeeTab('team')">Команда</div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="employeeProfile" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Мой профиль</h3>
+                    </div>
+                    <div class="stats-grid" id="employeeStats"></div>
+                </div>
+            </div>
+
+            <!-- My Tasks Tab -->
+            <div id="employeeMyTasks" class="tab-content hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Мои задачи</h3>
+                    </div>
+                    <div id="myTasksList"></div>
+                </div>
+            </div>
+
+            <!-- Team Tab -->
+            <div id="employeeTeam" class="tab-content hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Команда</h3>
+                    </div>
+                    <div class="employee-list" id="teamList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Employee Modal -->
+    <div id="employeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="employeeModalTitle">Добавить сотрудника</h3>
+                <button class="close-modal" onclick="closeEmployeeModal()">&times;</button>
+            </div>
+            <form id="employeeForm">
+                <input type="hidden" id="employeeId">
+                <div class="form-group">
+                    <label for="employeeUsername">Имя пользователя</label>
+                    <input type="text" id="employeeUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeePassword">Пароль</label>
+                    <input type="password" id="employeePassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeeFullName">ФИО</label>
+                    <input type="text" id="employeeFullName" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeePosition">Должность</label>
+                    <input type="text" id="employeePosition" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeeWorkplace">Место работы</label>
+                    <input type="text" id="employeeWorkplace" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEmployeeModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Task Modal -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="taskModalTitle">Добавить задачу</h3>
+                <button class="close-modal" onclick="closeTaskModal()">&times;</button>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="taskId">
+                <div class="form-group">
+                    <label for="taskEmployee">Сотрудник</label>
+                    <select id="taskEmployee" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="taskTitle">Название задачи</label>
+                    <input type="text" id="taskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="taskDescription">Описание</label>
+                    <textarea id="taskDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="taskUrgency">Срочность</label>
+                    <select id="taskUrgency" required>
+                        <option value="normal">Обычно</option>
+                        <option value="urgent">Срочно</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskDeadline">Примерный срок выполнения</label>
+                    <input type="date" id="taskDeadline" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeTaskModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task Detail Modal (for employees) -->
+    <div id="taskDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="taskDetailTitle"></h3>
+                <button class="close-modal" onclick="closeTaskDetailModal()">&times;</button>
+            </div>
+            <div id="taskDetailContent">
+                <input type="hidden" id="detailTaskId">
+                <div class="form-group">
+                    <label>Описание</label>
+                    <p id="taskDetailDescription" style="color: var(--text-secondary);"></p>
+                </div>
+                <div class="form-group">
+                    <label>Срочность</label>
+                    <div id="taskDetailUrgency"></div>
+                </div>
+                <div class="form-group">
+                    <label>Срок выполнения</label>
+                    <p id="taskDetailDeadline" style="color: var(--text-secondary);"></p>
+                </div>
+                <div class="form-group">
+                    <label for="taskDetailStatus">Статус задачи</label>
+                    <select id="taskDetailStatus" class="form-control">
+                        <option value="not_started">Не начата</option>
+                        <option value="in_progress">В процессе</option>
+                        <option value="completed">Выполнена</option>
+                        <option value="rejected">Отклонена</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="taskDetailProgress">Прогресс выполнения (%)</label>
+                    <input type="number" id="taskDetailProgress" min="0" max="100" class="form-control">
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="updateTaskStatus()">Обновить статус</button>
+                    <button class="btn btn-secondary" onclick="closeTaskDetailModal()">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>
